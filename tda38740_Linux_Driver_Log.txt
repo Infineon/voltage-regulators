@@ -1,0 +1,133 @@
+
+
+For XDPE192C4B Device without Load:
+
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat in*_label
+vin1
+vin2
+vout1
+vout2
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat in*_input  
+12156
+12156
+1802
+44
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat curr*_label   
+iin1
+iin2
+iout1
+iout2
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat curr*_input 
+-1000
+0
+-6500
+0
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat curr*_input 
+-1000
+0
+-6188
+0
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4#
+
+
+
+
+
+.................................................................................................................................
+.................................................................................................................................
+
+For XDPE192C4B Device with Load:
+
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat in*_label
+vin1
+vin2
+vout1
+vout2
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat in*_input  
+12156
+12125
+1796
+44
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat curr*_label   
+iin1
+iin2
+iout1
+iout2
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat curr*_input 
+750
+0
+5625
+0
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat curr*_input 
+625
+0
+5500
+0
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat curr*_input 
+750
+0
+6062
+0
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat in*_input  
+12125
+12125
+1794
+44
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# cat curr*_input 
+750
+0
+5750
+0
+root@raspberrypi:/sys/devices/platform/axi/1000120000.pcie/1f00074000.i2c/i2c-1/1-0076/hwmon/hwmon4# 
+
+.................................................................................................................................
+.................................................................................................................................
+
+
+
+For Device TDA38725A without load:
+
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/regulator/regulator.11# 
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/regulator/regulator.11# cat ../../hwmon/hwmon4/in*_label 
+vin
+vout1
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/regulator/regulator.11# cat ../../hwmon/hwmon4/in*_input 
+12281
+46
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/regulator/regulator.11# cat microvolts 
+46000
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/regulator/regulator.11#
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/regulator/regulator.11# cd ../
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/regulator#
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/regulator# cat ../hwmon/hwmon4/temp1_input 
+29000
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/regulator# cat ../hwmon/hwmon4/curr*_label
+iin
+iout1
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/regulator# cat ../hwmon/hwmon4/curr*_input 
+0
+0
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/regulator# cd ../hwmon/hwmon4/
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/hwmon/hwmon4# ls
+curr1_alarm  curr1_label  curr2_crit_alarm  curr2_label  in1_crit	 in1_input  in2_crit	    in2_input  in2_lcrit	name	 power	       power1_input  power2_input  subsystem   temp1_crit_alarm  temp1_max	  uevent
+curr1_input  curr2_crit   curr2_input	    device	 in1_crit_alarm  in1_label  in2_crit_alarm  in2_label  in2_lcrit_alarm	of_node  power1_alarm  power1_label  power2_label  temp1_crit  temp1_input	 temp1_max_alarm
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/hwmon/hwmon4# cat power
+power/        power1_alarm  power1_input  power1_label  power2_input  power2_label  
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/hwmon/hwmon4# cat power*_input 
+0
+0
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/hwmon/hwmon4# cat power*_label
+pin
+pout1
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/hwmon/hwmon4# cat power*_input 
+0
+0
+root@raspberrypi:/sys/bus/i2c/devices/1-004f/hwmon/hwmon4#
+
+
+.................................................................................................................................
+.................................................................................................................................
+
+
+
+
