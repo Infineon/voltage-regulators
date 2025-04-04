@@ -4,8 +4,9 @@ This Repository host Linux device driver for Infineon Digital Multiphase Control
 This release includes:
 1. README (this file).
 2. Kernel patch "0001-PMBUS-DRIVER-Support-for-Infineon-Devices" can be applied to Kernel source(6.6.58).
-3. GNU GPL File 
-4. tda38740 driver testing log as tda38740_driver_log File
+3. Kernel patch "0002-IFX-PMBUS-DRIVER-PEC-RETRY" for handling retry in case of PEC and NACK Error.
+4. GNU GPL File 
+5. tda38740 driver testing log as tda38740_driver_log File
 
 This tda38740 driver includes Infineon device driver for:
 1. Integrated-POL-Voltage-Regulators: TDA38725, TDA38725A, TDA38740, TDA38740A
