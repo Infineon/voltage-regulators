@@ -1,0 +1,21 @@
+Please provide compatible string for driver from devicetree.
+Example:
+
+i2c {
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+	hwmon@76 {
+		/* Specify the compatible device */
+		compatible = "infineon,xdpe19283";
+		/* Registry address */
+		reg = <0x76>;
+	};
+
+	hwmon@78 {
+		/* Specify the compatible device */
+		compatible = "infineon,xdpe192c3";
+		/* Registry address */
+		reg = <0x78>;
+	};
+};

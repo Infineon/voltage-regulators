@@ -1,0 +1,135 @@
+From 7c581b569e97e5f8ca649285dd2958241e27ba78 Mon Sep 17 00:00:00 2001
+From: Ashish Yadav <ashish.yadav@infineon.com>
+Date: Wed, 18 Feb 2026 11:30:35 +0530
+Subject: [PATCH] hwmon:(pmbus/xdpe192c3) XDPE19283/C3 Digital Multi-phase
+ Controller Driver
+
+Add the pmbus driver for the Infineon XDPE19283 and XDPE192C3 Digital
+Multi-phase Controllers.
+
+Signed-off-by: Ashish Yadav <ashish.yadav@infineon.com>
+---
+ drivers/hwmon/pmbus/Kconfig     | 10 +++++
+ drivers/hwmon/pmbus/Makefile    |  1 +
+ drivers/hwmon/pmbus/xdpe192c3.c | 77 +++++++++++++++++++++++++++++++++
+ 3 files changed, 88 insertions(+)
+ create mode 100644 drivers/hwmon/pmbus/xdpe192c3.c
+
+diff --git a/drivers/hwmon/pmbus/Kconfig b/drivers/hwmon/pmbus/Kconfig
+index a4f02cad9..0980839eb 100644
+--- a/drivers/hwmon/pmbus/Kconfig
++++ b/drivers/hwmon/pmbus/Kconfig
+@@ -590,6 +590,16 @@ config SENSORS_XDPE122_REGULATOR
+ 	help
+ 	  Uses the xdpe12284 or compatible as regulator.
+ 
++config SENSORS_XDPE192
++	tristate "Infineon XDPE192 family"
++	help
++	  If you say yes here you get hardware monitoring support for Infineon
++	  XDPE19283, XDPE192C3, device.
++
++	  This driver can also be built as a module. If so, the module will
++	  be called xdpe192c3.
++
++
+ config SENSORS_ZL6100
+ 	tristate "Intersil ZL6100 and compatibles"
+ 	help
+diff --git a/drivers/hwmon/pmbus/Makefile b/drivers/hwmon/pmbus/Makefile
+index d00bcc758..d81b24077 100644
+--- a/drivers/hwmon/pmbus/Makefile
++++ b/drivers/hwmon/pmbus/Makefile
+@@ -59,5 +59,6 @@ obj-$(CONFIG_SENSORS_UCD9200)	+= ucd9200.o
+ obj-$(CONFIG_SENSORS_XDP710)	+= xdp710.o
+ obj-$(CONFIG_SENSORS_XDPE122)	+= xdpe12284.o
+ obj-$(CONFIG_SENSORS_XDPE152)	+= xdpe152c4.o
++obj-$(CONFIG_SENSORS_XDPE192)	+= xdpe192c3.o
+ obj-$(CONFIG_SENSORS_ZL6100)	+= zl6100.o
+ obj-$(CONFIG_SENSORS_PIM4328)	+= pim4328.o
+diff --git a/drivers/hwmon/pmbus/xdpe192c3.c b/drivers/hwmon/pmbus/xdpe192c3.c
+new file mode 100644
+index 000000000..d9e75007f
+--- /dev/null
++++ b/drivers/hwmon/pmbus/xdpe192c3.c
+@@ -0,0 +1,77 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Hardware monitoring driver for Infineon Multi-phase Digital XDPE19283
++ * and XDPE192C3 Controllers
++ *
++ * Copyright (c) 2026 Infineon Technologies. All rights reserved.
++ */
++
++#include <linux/err.h>
++#include <linux/i2c.h>
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include "pmbus.h"
++
++#define XDPE192C3_PAGE_NUM 2
++
++static struct pmbus_driver_info xdpe192c3_info = {
++	.pages = XDPE192C3_PAGE_NUM,
++	.format[PSC_VOLTAGE_IN] = linear,
++	.format[PSC_VOLTAGE_OUT] = linear,
++	.format[PSC_TEMPERATURE] = linear,
++	.format[PSC_CURRENT_IN] = linear,
++	.format[PSC_CURRENT_OUT] = linear,
++	.format[PSC_POWER] = linear,
++	.func[0] = PMBUS_HAVE_VIN | PMBUS_HAVE_VOUT | PMBUS_HAVE_STATUS_VOUT |
++		   PMBUS_HAVE_IIN | PMBUS_HAVE_IOUT | PMBUS_HAVE_STATUS_IOUT |
++		   PMBUS_HAVE_TEMP | PMBUS_HAVE_TEMP2 | PMBUS_HAVE_STATUS_TEMP |
++		   PMBUS_HAVE_POUT | PMBUS_HAVE_PIN | PMBUS_HAVE_STATUS_INPUT,
++	.func[1] = PMBUS_HAVE_VIN | PMBUS_HAVE_VOUT | PMBUS_HAVE_STATUS_VOUT |
++		   PMBUS_HAVE_IIN | PMBUS_HAVE_IOUT | PMBUS_HAVE_STATUS_IOUT |
++		   PMBUS_HAVE_PIN | PMBUS_HAVE_POUT | PMBUS_HAVE_STATUS_INPUT,
++};
++
++static int xdpe192c3_probe(struct i2c_client *client)
++{
++	struct pmbus_driver_info *info;
++
++	info = devm_kmemdup(&client->dev, &xdpe192c3_info, sizeof(*info),
++			    GFP_KERNEL);
++	if (!info)
++		return -ENOMEM;
++
++	return pmbus_do_probe(client, info);
++}
++
++static const struct i2c_device_id xdpe192c3_id[] = {
++		{ "xdpe19283" },
++		{ "xdpe192c3" },
++		{}
++};
++
++MODULE_DEVICE_TABLE(i2c, xdpe192c3_id);
++
++static const struct of_device_id __maybe_unused xdpe192c3_of_match[] = {
++		{ .compatible = "infineon,xdpe19283" },
++		{ .compatible = "infineon,xdpe192c3" },
++		{}
++};
++
++MODULE_DEVICE_TABLE(of, xdpe192c3_of_match);
++
++static struct i2c_driver xdpe192c3_driver = {
++	.driver = {
++		.name = "xdpe192c3",
++		.of_match_table = of_match_ptr(xdpe192c3_of_match),
++	},
++	.probe = xdpe192c3_probe,
++	.id_table = xdpe192c3_id,
++};
++
++module_i2c_driver(xdpe192c3_driver);
++
++MODULE_AUTHOR("Ashish Yadav <ashish.yadav@infineon.com>");
++MODULE_DESCRIPTION("PMBus driver for Infineon XDPE19283/C3");
++MODULE_LICENSE("GPL");
++MODULE_IMPORT_NS(PMBUS);
+-- 
+2.39.5
+
