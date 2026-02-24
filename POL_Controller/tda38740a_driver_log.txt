@@ -11,7 +11,7 @@ i2c {
 		/* Registry address */
 		reg = <0x40>;
 		/* vout-voltage-multiplier values */
-		vout-voltage-multiplier = <70 75>;
+		infineon,vout-voltage-multiplier = <70 75>;
 	};
 
 	hwmon@4F {
@@ -20,7 +20,7 @@ i2c {
 		/* Registry address */
 		reg = <0x4F>;
 		/* vout-voltage-multiplier values */
-		vout-voltage-multiplier = <80 60>;
+		infineon,vout-voltage-multiplier = <80 60>;
 	};
 };
 
