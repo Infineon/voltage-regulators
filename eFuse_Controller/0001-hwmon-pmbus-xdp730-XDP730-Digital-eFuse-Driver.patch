@@ -1,0 +1,174 @@
+From df379b2fe5a91d8d409eaf1fda7abb4070631da2 Mon Sep 17 00:00:00 2001
+From: Ashish Yadav <ashish.yadav@infineon.com>
+Date: Tue, 3 Mar 2026 13:04:23 +0530
+Subject: [PATCH] hwmon:(pmbus/xdp730) XDP730 Digital eFuse Driver
+
+Add the pmbus driver for the Infineon XDP730 eFuse.
+
+Signed-off-by: Ashish Yadav <ashish.yadav@infineon.com>
+---
+ drivers/hwmon/pmbus/Kconfig  |  10 +++
+ drivers/hwmon/pmbus/Makefile |   1 +
+ drivers/hwmon/pmbus/xdp730.c | 117 +++++++++++++++++++++++++++++++++++
+ 3 files changed, 128 insertions(+)
+ create mode 100644 drivers/hwmon/pmbus/xdp730.c
+
+diff --git a/drivers/hwmon/pmbus/Kconfig b/drivers/hwmon/pmbus/Kconfig
+index a4f02cad9..5fadeb7de 100644
+--- a/drivers/hwmon/pmbus/Kconfig
++++ b/drivers/hwmon/pmbus/Kconfig
+@@ -566,6 +566,16 @@ config SENSORS_XDP710
+ 	  This driver can also be built as a module. If so, the module will
+ 	  be called xdp710.
+ 
++config SENSORS_XDP730
++	tristate "Infineon XDP730 family"
++	help
++	  If you say yes here you get hardware monitoring support for Infineon
++	  XDP730.
++
++	  This driver can also be built as a module. If so, the module will
++	  be called xdp730.
++
++
+ config SENSORS_XDPE152
+ 	tristate "Infineon XDPE152 family"
+ 	help
+diff --git a/drivers/hwmon/pmbus/Makefile b/drivers/hwmon/pmbus/Makefile
+index d00bcc758..3006b812e 100644
+--- a/drivers/hwmon/pmbus/Makefile
++++ b/drivers/hwmon/pmbus/Makefile
+@@ -57,6 +57,7 @@ obj-$(CONFIG_SENSORS_TPS546D24)	+= tps546d24.o
+ obj-$(CONFIG_SENSORS_UCD9000)	+= ucd9000.o
+ obj-$(CONFIG_SENSORS_UCD9200)	+= ucd9200.o
+ obj-$(CONFIG_SENSORS_XDP710)	+= xdp710.o
++obj-$(CONFIG_SENSORS_XDP730)	+= xdp730.o
+ obj-$(CONFIG_SENSORS_XDPE122)	+= xdpe12284.o
+ obj-$(CONFIG_SENSORS_XDPE152)	+= xdpe152c4.o
+ obj-$(CONFIG_SENSORS_ZL6100)	+= zl6100.o
+diff --git a/drivers/hwmon/pmbus/xdp730.c b/drivers/hwmon/pmbus/xdp730.c
+new file mode 100644
+index 000000000..b8f768a39
+--- /dev/null
++++ b/drivers/hwmon/pmbus/xdp730.c
+@@ -0,0 +1,117 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * Hardware monitoring driver for Infineon XDP730 Digital eFuse Controller
++ *
++ * Copyright (c) 2026 Infineon Technologies. All rights reserved.
++ */
++
++#include <linux/i2c.h>
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/kernel.h>
++#include <linux/of_device.h>
++#include <linux/bitops.h>
++#include "pmbus.h"
++
++#define XDP730_TELEMETRY_AVG	0xE9
++
++static struct pmbus_driver_info xdp730_info = {
++	.pages = 1,
++	.format[PSC_VOLTAGE_IN] = direct,
++	.format[PSC_VOLTAGE_OUT] = direct,
++	.format[PSC_CURRENT_OUT] = direct,
++	.format[PSC_POWER] = direct,
++	.format[PSC_TEMPERATURE] = direct,
++
++	.m[PSC_VOLTAGE_IN] = 4653,
++	.b[PSC_VOLTAGE_IN] = 0,
++	.R[PSC_VOLTAGE_IN] = -2,
++	.m[PSC_VOLTAGE_OUT] = 4653,
++	.b[PSC_VOLTAGE_OUT] = 0,
++	.R[PSC_VOLTAGE_OUT] = -2,
++	.m[PSC_CURRENT_OUT] = 24668,
++	.b[PSC_CURRENT_OUT] = 0,
++	.R[PSC_CURRENT_OUT] = -4,
++	.m[PSC_POWER] = 4486,
++	.b[PSC_POWER] = 0,
++	.R[PSC_POWER] = -1,
++	.m[PSC_TEMPERATURE] = 54,
++	.b[PSC_TEMPERATURE] = 22521,
++	.R[PSC_TEMPERATURE] = -1,
++
++	.func[0] = PMBUS_HAVE_VIN | PMBUS_HAVE_VOUT | PMBUS_HAVE_PIN |
++		   PMBUS_HAVE_TEMP | PMBUS_HAVE_IOUT | PMBUS_HAVE_STATUS_INPUT |
++		   PMBUS_HAVE_STATUS_TEMP,
++};
++
++static int xdp730_probe(struct i2c_client *client)
++{
++	struct pmbus_driver_info *info;
++	int ret;
++	u32 rimon;
++	int gimon;
++
++	info = devm_kmemdup(&client->dev, &xdp730_info, sizeof(*info),
++			    GFP_KERNEL);
++	if (!info)
++		return -ENOMEM;
++
++	ret = i2c_smbus_read_word_data(client, XDP730_TELEMETRY_AVG);
++	if (ret < 0) {
++		dev_err(&client->dev, "Can't get TELEMETRY_AVG\n");
++		return ret;
++	}
++
++	dev_info(&client->dev, "TELEMETRY_AVG:%x\n", ret);
++
++	ret >>= 10;
++	ret &= GENMASK(0, 0);
++	if (ret == 1)
++		gimon = 20000; /* output gain 20 microA/A */
++	else
++		gimon = 10000; /* output gain 10 microA/A */
++
++	dev_info(&client->dev, "gimon:%d ret:%d\n", gimon,ret);
++
++	if (of_property_read_u32(client->dev.of_node, "imon-resistor", &rimon))
++		rimon = 2000; /* Default 2k ohms if not set via DT */
++	if (rimon == 0)
++		return -EINVAL;
++
++	dev_info(&client->dev, "rimon:%d.%03d kohms\n", rimon / 1000, rimon % 1000);
++
++	info->m[PSC_CURRENT_OUT] = DIV_ROUND_CLOSEST_ULL((u64)info->m[PSC_CURRENT_OUT] * rimon * gimon,1000000);
++	info->m[PSC_POWER] = DIV_ROUND_CLOSEST_ULL((u64)info->m[PSC_POWER] * rimon * gimon, 1000000000);
++
++	dev_info(&client->dev, "m_CURRENT:%d m_POWER:%d\n", info->m[PSC_CURRENT_OUT], info->m[PSC_POWER]);
++
++	return pmbus_do_probe(client, info);
++}
++
++static const struct of_device_id xdp730_of_match[] = {
++	{ .compatible = "infineon,xdp730" },
++	{}
++};
++
++static const struct i2c_device_id xdp730_id[] = {
++	{ "xdp730" },
++	{}
++};
++
++MODULE_DEVICE_TABLE(i2c, xdp730_id);
++
++static struct i2c_driver xdp730_driver = {
++	.driver = {
++		   .name = "xdp730",
++		   .of_match_table = xdp730_of_match,
++	},
++	.probe = xdp730_probe,
++	.id_table = xdp730_id,
++};
++
++module_i2c_driver(xdp730_driver);
++
++MODULE_AUTHOR("Ashish Yadav <ashish.yadav@infineon.com>");
++MODULE_DESCRIPTION("PMBus driver for Infineon Digital XDP730 eFuse Controller");
++MODULE_LICENSE("GPL");
++MODULE_IMPORT_NS(PMBUS);
+-- 
+2.39.5
+

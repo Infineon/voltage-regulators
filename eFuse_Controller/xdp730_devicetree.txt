@@ -1,0 +1,18 @@
+Technical Notes:
+• Kernel Version: Developed against Linux Kernel v6.12.
+• Provide compatible string for driver from devicetree.
+• I2C Slave addresses may vary as per system (here its 0x11).
+• Configuration: The customer must specify the RIMON value (in ohms) via the Device Tree. 
+    For a 1.098 kΩ resistor, the entry should look like this:
+
+i2c {
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+	hwmon@11 {
+		compatible = "infineon,xdp730";
+		imon-resistor = <1098>;
+	};	reg = <0x11>;
+};
+
+
